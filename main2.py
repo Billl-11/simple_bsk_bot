@@ -21,7 +21,7 @@ embedding = OllamaEmbeddings(
 path = "./Vectorstore_folder_2"
 
 if os.path.exists(path):
-    print('found')
+    print(f'{path} found')
     vectorstore = Chroma(
         persist_directory = path,
         embedding_function = embedding
@@ -30,7 +30,7 @@ if os.path.exists(path):
 else:
 
     #sites
-    print('not found')
+    print(f'{path} not found')
     loader = WebBaseLoader(
         web_path=["https://barata.ai/about/",'https://barata.ai/','https://barata.ai/services/','https://barata.ai/products/','https://barata.ai/contact/']
     )
@@ -50,14 +50,12 @@ else:
         add_start_index = True 
     )
     all_splits = text_splitter.split_documents(all_docs)
-    print('run till here')
     vectorstore = Chroma.from_documents(
         all_splits,
         embedding,
         persist_directory=path
         )
     print('Vector store creation is finish')
-    print(all_splits[-1])
 
 
 retriever = vectorstore.as_retriever(
@@ -115,36 +113,6 @@ rag_chain = (
     | llm
 )
 
-# chat_history = []
-
-# # first question
-# question = "What is BSK?"
-# ai_msg = rag_chain.invoke(
-#     {
-#         "question": question,
-#         "chat_history": chat_history
-#     }
-# )
-
-# # add memory
-# chat_history.extend(
-#     [
-#         HumanMessage(content=question), ai_msg
-#     ]
-# )
-
-# # second question
-# second_question = "specializes in what?"
-
-# rag_chain.invoke(
-#     {
-#         "question": second_question,
-#         "chat_history": chat_history
-#     }
-# )
-
-# print(chat_history)
-
 def response_generator(prompt, chat_history):
     ai_msg = rag_chain.invoke(
         {
@@ -163,24 +131,24 @@ if "messages" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Display chat messages from history on app rerun
+# Display chat messages from history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 # Accept user input
 if prompt := st.chat_input("What is up?"):
-    # Add user message to chat history
+    
     st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
+
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Display assistant response in chat message container
+   
     with st.chat_message("assistant"):
         response = response_generator(prompt, st.session_state.chat_history)
         st.markdown(response)
-    # Add assistant response to chat history
+    
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.session_state.chat_history.extend(
         [HumanMessage(content=prompt), response]
